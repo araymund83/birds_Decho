@@ -8,7 +8,6 @@ g <- gc(reset = TRUE)
 rm(list = ls())
 
 # Load data ---------------------------------------------------------------4
-root <- './qs_edeh'
 species <- c("ALFL", "AMCR", "AMRE", "AMRO", "ATSP", "ATTW", "BAWW", "BBWA", 
              "BBWO", "BCCH", "BHCO", "BHVI", "BLPW", "BOCH", "BRBL", "BRCR",
              "BTNW", "CAWA", "CCSP", "CHSP", "CONW", "CORA", "COYE", "DEJU", 
@@ -34,13 +33,13 @@ plot(sf::st_geometry(edeh))
 plot(sf::st_geometry(dehcho))
 
 # Function to use ---------------------------------------------------------
-logRatio_rasters <- function(spc, studyArea, studyAreaName, yr1, yr2){
+changes_rasters <- function(spc, studyArea, studyAreaName, yr1, yr2){
   #spc <- species[2] # Run and comment (after)
   message(crayon::green("Calculating changes for: ", spc))
-  path <- glue('./qs_{studyAreaName}/occuReclass')
-  fls <- list.files(path, pattern =  'reclass_yrs', full.names = TRUE)
+  path <- glue('./qs_{studyAreaName}/occur')
+  fls <- list.files(path, pattern =  'occ_yrs', full.names = TRUE)
   fle <- grep(spc, fls, value = TRUE)
-  tbl <- qs::qread(file = glue('{path}/occmsk_reclass_yrs_{spc}.qs'))
+  tbl <- qs::qread(file = glue('{path}/occ_yrs_{spc}.qs'))
   tbl <- dplyr::select(tbl, x, y, gc, everything())
   names(tbl)[1:2] <- c('lon', 'lat')
   tbl <- mutate(tbl, avg = rowMeans(tbl[,4:9]))
@@ -48,12 +47,12 @@ logRatio_rasters <- function(spc, studyArea, studyAreaName, yr1, yr2){
   gcm <- unique(tbl$gc)
   
   message(crayon::green(glue('Estimating change from {yr1} to {yr2} year\n')))
-  tbl <- mutate(tbl, change = tbl$`2031` - tbl$`2011`)  #change 2100 for 2091
-  tbl <- mutate(tbl, perctChange = ((tbl$`2031` - tbl$`2011`) / tbl$`2011`) * 100) # use if you want to calculate the percent change from baselinea
-  tbl <- mutate(tbl, ratio = tbl$`2031`/tbl$`2011`)
+  tbl <- mutate(tbl, change = tbl$y2091 - tbl$y2011)  #change 2100 for 2091
+  tbl <- mutate(tbl, perctChange = ((tbl$y2091 - tbl$y2011) / tbl$y2011) * 100) # use if you want to calculate the percent change from baselinea
+  tbl <- mutate(tbl, ratio = tbl$y2091/tbl$y2011)
   tbl <- mutate(tbl, logRatio = log2(ratio))
   tbl <- mutate(tbl, gc = as.factor(gc))
-  out <- glue('./qs_{studyAreaName}/occuReclass')
+  out <- glue('./qs_{studyAreaName}/occur')
   ifelse(!dir.exists(out), dir.create(out, recursive = TRUE), print('Folder already exist'))
   
   qs::qsave(x = tbl, file = glue('{out}/occur_changes_{studyAreaName}_{yr1}-{yr2}_{spc}.qs'))
@@ -79,12 +78,12 @@ logRatio_rasters <- function(spc, studyArea, studyAreaName, yr1, yr2){
           legend.title = element_text(size = 12, face = 'bold'), 
           strip.text = element_text(size =12)) +
     labs(x = 'Longitude', y = 'Latitude', fill = 'Change')
-  out <- glue('./maps/occuReclass/changes/{studyAreaName}') 
+  out <- glue('./maps/occur/changes/{studyAreaName}') 
   ifelse(!dir.exists(out), dir.create(out, recursive = TRUE), 'Folder already exist')
   ggsave(plot = ggRatio,filename = glue('{out}/ocurr_change_{yr1}-{yr2}_{studyAreaName}_{spc}.png'),
          units = 'in', width = 12, height = 9, dpi = 700)
 }
 
 # Apply the function -----------------------------------------------------
-purrr::map(.x= species, dehcho,'dehcho', '2011', '2031', .f = logRatio_rasters)
+purrr::map(.x= species, edeh,'edeh', '2011', '2031', .f = changes_rasters)
 
