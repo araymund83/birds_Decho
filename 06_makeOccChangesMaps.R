@@ -1,8 +1,7 @@
 # Load libraries ----------------------------------------------------------
 require(pacman)
-pacman::p_load(ggspatial, 
-               ggpubr, gridExtra, stringr, glue, sf, tidyverse, fasterize,RColorBrewer,
-               RStoolbox, fs, fst, trend, colorspace, hrbrthemes,exactextractr, purrr, future, spatialEco)
+pacman::p_load(stringr, glue, sf, tidyverse, RColorBrewer, fs, colorspace, 
+               purrr)
 
 g <- gc(reset = TRUE)
 rm(list = ls())
@@ -47,9 +46,9 @@ changes_rasters <- function(spc, studyArea, studyAreaName, yr1, yr2){
   gcm <- unique(tbl$gc)
   
   message(crayon::green(glue('Estimating change from {yr1} to {yr2} year\n')))
-  tbl <- mutate(tbl, change = tbl$y2091 - tbl$y2011)  #change 2100 for 2091
-  tbl <- mutate(tbl, perctChange = ((tbl$y2091 - tbl$y2011) / tbl$y2011) * 100) # use if you want to calculate the percent change from baselinea
-  tbl <- mutate(tbl, ratio = tbl$y2091/tbl$y2011)
+  tbl <- mutate(tbl, change = tbl$y2031 - tbl$y2011)  #change 2100 for 2091
+  tbl <- mutate(tbl, perctChange = ((tbl$y2031 - tbl$y2011) / tbl$y2011) * 100) # use if you want to calculate the percent change from baselinea
+  tbl <- mutate(tbl, ratio = tbl$y2031/tbl$y2011)
   tbl <- mutate(tbl, logRatio = log2(ratio))
   tbl <- mutate(tbl, gc = as.factor(gc))
   out <- glue('./qs_{studyAreaName}/occur')
@@ -60,7 +59,7 @@ changes_rasters <- function(spc, studyArea, studyAreaName, yr1, yr2){
   message(crayon::green('Making map for: ',spc))
   ggRatio <- ggplot() +
     geom_tile(data = tbl, aes(x = lon, y = lat, color = change)) + # use logRatio or change
-    #geom_sf(data = dehcho, fill = NA, col = 'gray10') + # !!! use only when studyAreaName = 'dehcho'
+    geom_sf(data = dehcho, fill = NA, col = 'gray10') + # !!! use only when studyAreaName = 'dehcho'
     geom_sf(data = edeh, fill= NA, col = 'gray10') +
  #   scale_fill_gradientn(colours = colorspace::diverging_hcl(n = 10, palette = 'Green-Brown'),rev = TRUE,
   #                       na.value = '#999999',breaks = breaks,limits = c(-1, 1) * max(abs(tbl$change))) +
@@ -85,5 +84,5 @@ changes_rasters <- function(spc, studyArea, studyAreaName, yr1, yr2){
 }
 
 # Apply the function -----------------------------------------------------
-purrr::map(.x= species, edeh,'edeh', '2011', '2031', .f = changes_rasters)
+purrr::map(.x= species, dehcho,'dehcho', '2011', '2031', .f = changes_rasters)
 
