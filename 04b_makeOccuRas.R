@@ -19,12 +19,13 @@ dirs <- fs::dir_ls(root, type = 'directory')
 spcs <- basename(dirs)
 spcs <- spcs[1:72]
 
-paths <- list.files('./outputs_masked/edeh', full.names = TRUE)
+
 
 # Function -----------------------------------------------------------------
 get_probOcc <- function(spc,studyAreaName){
-  
-  #spc <- species[38] # Run and erase
+ 
+  paths <- list.files(glue('./outputs_masked/{studyAreaName}'), full.names = TRUE) 
+  spc <- spcs[38] # Run and erase
   message(crayon::green("Starting with:", spc))
   fle <- grep(spc, paths, value = TRUE)
   yrs <- parse_number(basename(fle))
@@ -37,17 +38,12 @@ get_probOcc <- function(spc,studyAreaName){
     message(crayon::green('Loading files for', gcm[k]))
     fl <- grep(gcm[k],fle, value = TRUE)
     fl <- as.character(fl)
-    cellArea = 6.25
-    #dps <- raster::calc(x = stk, fun = function(pxl){1- dpois(x = 0, lambda = pxl)})
-    #ou <- glue('./outputs/occur/occu_{spc}_{gcm}.tif')
-    #dr <- dirname(name)
-    #writeRaster(x = dps, filename = ou[k], overwrite = TRUE )
-    
+
     proOccRas<-  map(.x = 1:length(yrs), .f = function(yr){
       message(crayon::green('Year', yrs[yr]))
       sfl <- grep(yrs[yr], fl, value = TRUE)
       rst <- raster::raster(sfl)
-      dps <- raster::calc(x = rst, fun = function(pxl){1- dpois(x = 0, lambda = pxl * cellArea)})
+      dps <- raster::calc(x = rst, fun = function(pxl){1- dpois(x = 0, lambda = pxl * pi)})
       out <- glue('./outputs/occur/{studyAreaName}')
       ifelse(!dir.exists(out), dir.create(out, recursive = TRUE), print('Folder already exist'))
       raster::writeRaster(x = dps, 
