@@ -1,8 +1,7 @@
 # Load libraries ----------------------------------------------------------
 require(pacman)
-pacman::p_load(ggspatial, 
-               ggpubr, gridExtra, stringr, glue, sf, tidyverse, fasterize,RColorBrewer,
-               RStoolbox, fs, fst, trend, colorspace, hrbrthemes,exactextractr, purrr, future, spatialEco)
+pacman::p_load(ggspatial, stringr, glue, sf, tidyverse,RColorBrewer,
+               fs, colorspace, purrr)
 
 g <- gc(reset = TRUE)
 rm(list = ls())

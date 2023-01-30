@@ -1,7 +1,6 @@
 library(pacman)
 
-pacman::p_load(colorspace,glue, gtools,qs, stringr, sf, 
-               tidyverse, terra, fs, gtools, hrbrthemes, colorspace)
+pacman::p_load(glue, qs, stringr, sf, tidyverse,fs)
 
 rm(list = ls())
 
@@ -11,13 +10,10 @@ dirs <- fs::dir_ls(root, type = 'directory')
 species <- basename(dirs)
 species <- species[1:72]
 
-files <- list.files('./qs_edeh/changes')
-files <- grep('changes', files, value = TRUE)
-
-
 #Create summary table summing all rows for each species ------------------
 sum_table <- function(specie, studyAreaName, yr1, yr2){
- #specie <- spcs[1]
+  
+ #specie <- species[1]
   message(crayon::blue('Starting\n', specie, '\n'))
   out <- glue('./qs_{studyAreaName}/changes/')
   table <- qs::qread(file = glue('{out}changes_{studyAreaName}_{yr1}-{yr2}_{specie}.qs'))
@@ -27,7 +23,7 @@ sum_table <- function(specie, studyAreaName, yr1, yr2){
   return(sumDF)
 }  
 
-sumTable <- map(.x = species,'dehcho', '2011','2091', .f = sum_table)
+sumTable <- map(.x = species,'edeh', '2011','2091', .f = sum_table)
 
 totalTable <- bind_rows(sumTable)  
 out <- glue('./qs_{studyAreaName}/changes/')
